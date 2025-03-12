@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/JeffreyCA/azure-dev/refs/heads/jeffreyca/4889/compose-ai-search/schemas/alpha/azure.yaml.json
+
+name: ai-project
+resources:
+  text-embedding-3-small:
+    type: ai.openai.model
+    model:
+      name: text-embedding-3-small
+      version: "1"
+  host:
+    type: host.containerapp
+    uses:
+      - text-embedding-3-small
+      - ai-project
+      - gpt-4o
+      - search
+    port: 5000
+  ai-project:
+    type: ai.project
+    models:
+      - name: Phi-4
+        version: "4"
+        format: Microsoft
+        sku:
+          name: GlobalStandard
+          usageName: AIServices.GlobalStandard.MaaS
+          capacity: 1
+  gpt-4o:
+    type: ai.openai.model
+    model:
+      name: gpt-4o
+      version: "2024-08-06"
+  search:
+    type: ai.search
+services:
+  host:
+    project: .
+    host: containerapp
+    language: python
+    docker:
+      path: Dockerfile
