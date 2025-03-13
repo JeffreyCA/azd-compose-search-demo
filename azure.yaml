@@ -2,34 +2,28 @@
 
 name: ai-project
 resources:
-  text-embedding-3-small:
-    type: ai.openai.model
-    model:
-      name: text-embedding-3-small
-      version: "1"
   host:
     type: host.containerapp
     uses:
-      - text-embedding-3-small
-      - ai-project
       - gpt-4o
       - search
+      - ai-project
     port: 5000
-  ai-project:
-    type: ai.project
-    models:
-      - name: Phi-4
-        version: "4"
-        format: Microsoft
-        sku:
-          name: GlobalStandard
-          usageName: AIServices.GlobalStandard.MaaS
-          capacity: 1
   gpt-4o:
     type: ai.openai.model
     model:
       name: gpt-4o
       version: "2024-08-06"
+  ai-project:
+    type: ai.project
+    models:
+      - name: Phi-4-mini-instruct
+        version: "1"
+        format: Microsoft
+        sku:
+          name: GlobalStandard
+          usageName: AIServices.GlobalStandard.MaaS
+          capacity: 1
   search:
     type: ai.search
 services:

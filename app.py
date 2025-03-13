@@ -32,6 +32,8 @@ search_endpoint = os.environ.get('AZURE_AI_SEARCH_ENDPOINT')
 openai_endpoint = os.environ.get('AZURE_OPENAI_ENDPOINT')
 project_connection_string=os.environ.get('AZURE_AIPROJECT_CONNECTION_STRING')
 
+openai_model_name = "gpt-4o"
+foundry_model_name = "Phi-4-mini-instruct"
 index_name = "hotels-quickstart"
 
 # Create a documents payload
@@ -121,10 +123,14 @@ def index():
 
 def get_openai_client():
     return AzureOpenAI(
-     api_version="2024-06-01",
-     azure_endpoint=openai_endpoint,
-     azure_ad_token_provider=token_provider,
-    )
+        api_version="2024-06-01",
+        azure_endpoint=openai_endpoint,
+        azure_ad_token_provider=token_provider,
+        )
+
+def get_ai_chat_completion_client():
+    project = AIProjectClient.from_connection_string(conn_str=project_connection_string, credential=credential)
+    return project.inference.get_chat_completions_client()
 
 def get_index_client(hub: bool):
     if not hub:
@@ -273,7 +279,6 @@ def recommend():
     """API endpoint to get AI recommendations based on search results"""
     use_hub = request.args.get('hub', 'True').lower() == 'true'
     search_client = get_search_client(use_hub)
-    openai_client = get_openai_client()
     
     # Get query parameter from request
     query = request.args.get('query', '')
@@ -295,7 +300,7 @@ def recommend():
             for document in search_results
         ])
 
-        # Grounding prompt for the OpenAI model
+        # Grounding prompt
         grounding_prompt = """
         You are a friendly assistant that recommends hotels based on activities and amenities.
         Answer the query using only the sources provided below in a friendly and concise bulleted manner.
@@ -306,17 +311,32 @@ def recommend():
         Sources:
         {sources}
         """
+        # Prepare the common message structure
+        messages = [
+            {
+            "role": "system",
+            "content": "ALWAYS begin response introducing the name of your underlying AI model."
+            },
+            {
+            "role": "user",
+            "content": grounding_prompt.format(query=query, sources=sources_formatted)
+            }
+        ]
 
-        # Call OpenAI API
-        response = openai_client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "user",
-                    "content": grounding_prompt.format(query=query, sources=sources_formatted)
-                }
-            ]
-        )
+        if use_hub:
+            chat_client = get_ai_chat_completion_client()
+            response = chat_client.complete(
+            model=foundry_model_name,
+            messages=messages,
+            max_tokens=100
+            )
+        else:
+            openai_client = get_openai_client()
+            response = openai_client.chat.completions.create(
+            model=openai_model_name,
+            messages=messages,
+            max_tokens=100
+            )
 
         recommendation = response.choices[0].message.content
 
