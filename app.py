@@ -28,7 +28,7 @@ credential = DefaultAzureCredential()
 # credential = AzureDeveloperCliCredential(tenant_id=tenant_id)
 token_provider: AzureADTokenProvider = get_bearer_token_provider(credential, scopes)
 
-search_endpoint = os.environ.get('AZURE_SEARCH_ENDPOINT')
+search_endpoint = os.environ.get('AZURE_AI_SEARCH_ENDPOINT')
 openai_endpoint = os.environ.get('AZURE_OPENAI_ENDPOINT')
 project_connection_string=os.environ.get('AZURE_AIPROJECT_CONNECTION_STRING')
 
