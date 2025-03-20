@@ -1,18 +1,18 @@
-from flask import Flask, render_template, request, jsonify
 import os
+
+from flask import Flask, render_template, request, jsonify
+from azure.core.credentials import AzureKeyCredential
 from azure.identity import DefaultAzureCredential, AzureDeveloperCliCredential, get_bearer_token_provider
-from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents import SearchClient
+from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import (
     ComplexField,
-    SimpleField,
     SearchFieldDataType,
     SearchableField,
-    SearchIndex
+    SearchIndex,
+    SimpleField,
 )
 from azure.ai.projects import AIProjectClient
-from flask import jsonify, request
-from azure.core.credentials import AzureKeyCredential
 from azure.ai.projects.models import ConnectionType
 from openai import AzureOpenAI
 from openai.lib.azure import AzureADTokenProvider
@@ -33,7 +33,7 @@ openai_endpoint = os.environ.get('AZURE_OPENAI_ENDPOINT')
 project_connection_string=os.environ.get('AZURE_AIPROJECT_CONNECTION_STRING')
 
 openai_model_name = "gpt-4o"
-foundry_model_name = "Phi-4-mini-instruct"
+foundry_model_name = "gpt-4o-mini"
 index_name = "hotels-quickstart"
 
 # Create a documents payload
@@ -200,7 +200,7 @@ def create_index():
     result = index_client.create_or_update_index(index)
     print(f' {result.name} created')
 
-    return jsonify({"index": result.name, 'credential': type(index_client._credential).__name__})
+    return jsonify({"index": result.name})
 
 @app.route('/api/upload_documents')
 def upload_documents():
@@ -210,10 +210,10 @@ def upload_documents():
     try:
         result = search_client.upload_documents(documents=documents)
         print("Upload of new document succeeded: {}".format(result[0].succeeded))
-        return jsonify({"result": result[0].succeeded, 'credential': type(search_client._credential).__name__})
+        return jsonify({"result": result[0].succeeded})
     except Exception as ex:
         print(ex.message)
-        return jsonify({"error": "Upload failed", "message": ex.message, 'credential': type(search_client._credential).__name__}), 500
+        return jsonify({"error": "Upload failed", "message": ex.message}), 500
 
 @app.route('/api/search')
 def search():
@@ -224,55 +224,65 @@ def search():
     # Get query parameter from request, default to "*" if not provided
     search_query = request.args.get('query', '*')
     
-    # Run a search with the provided query
-    results = search_client.search(
-        query_type='simple',
-        search_text=search_query,
-        select='HotelName,Description,Tags',
-        include_total_count=True
-    )
+    try:
+        # Run a search with the provided query
+        results = search_client.search(
+            query_type='simple',
+            search_text=search_query,
+            select='HotelName,Description,Tags',
+            include_total_count=True
+        )
 
-    response_data = {
-        'credential': type(search_client._credential).__name__,
-        'total_count': results.get_count(),
-        'results': []
-    }
-    
-    for result in results:
-        response_data['results'].append({
-            'score': result["@search.score"],
-            'hotel_name': result["HotelName"],
-            'description': result["Description"],
-            'tags': result.get("Tags", [])
-        })
-    
-    return jsonify(response_data)
+        response_data = {
+            'total_count': results.get_count(),
+            'results': []
+        }
+        
+        for result in results:
+            response_data['results'].append({
+                'score': result["@search.score"],
+                'hotel_name': result["HotelName"],
+                'description': result["Description"],
+                'tags': result.get("Tags", [])
+            })
+        
+        return jsonify(response_data)
+    except Exception as ex:
+        return jsonify({
+            "error": "Search failed", 
+            "message": str(ex)
+        }), 500
 
 @app.route('/api/empty_query')
 def empty_query():
     use_hub = request.args.get('hub', 'True').lower() == 'true'
     search_client = get_search_client(use_hub)
 
-    # Run an empty query (returns selected fields, all documents)
-    results = search_client.search(query_type='simple',
-        search_text="*",
-        select='HotelName,Description',
-        include_total_count=True)
+    try:
+        # Run an empty query (returns selected fields, all documents)
+        results = search_client.search(query_type='simple',
+            search_text="*",
+            select='HotelName,Description',
+            include_total_count=True)
 
-    response_data = {
-        'credential': type(search_client._credential).__name__,
-        'total_count': results.get_count(),
-        'results': []
-    }
-    
-    for result in results:
-        response_data['results'].append({
-            'score': result["@search.score"],
-            'hotel_name': result["HotelName"],
-            'description': result["Description"]
-        })
-    
-    return jsonify(response_data)
+        response_data = {
+            'total_count': results.get_count(),
+            'results': []
+        }
+        
+        for result in results:
+            response_data['results'].append({
+                'score': result["@search.score"],
+                'hotel_name': result["HotelName"],
+                'description': result["Description"]
+            })
+        
+        return jsonify(response_data)
+    except Exception as ex:
+        return jsonify({
+            "error": "Empty query search failed", 
+            "message": str(ex),
+        }), 500
 
 @app.route('/api/recommend')
 def recommend():
@@ -311,12 +321,8 @@ def recommend():
         Sources:
         {sources}
         """
-        # Prepare the common message structure
+
         messages = [
-            {
-            "role": "system",
-            "content": "ALWAYS begin response introducing the name of your underlying AI model."
-            },
             {
             "role": "user",
             "content": grounding_prompt.format(query=query, sources=sources_formatted)
@@ -328,14 +334,14 @@ def recommend():
             response = chat_client.complete(
             model=foundry_model_name,
             messages=messages,
-            max_tokens=100
+            max_tokens=100,
             )
         else:
             openai_client = get_openai_client()
             response = openai_client.chat.completions.create(
             model=openai_model_name,
             messages=messages,
-            max_tokens=100
+            max_tokens=100,
             )
 
         recommendation = response.choices[0].message.content
@@ -343,14 +349,12 @@ def recommend():
         return jsonify({
             'recommendation': recommendation,
             'sources_count': len(search_results),
-            'credential': type(search_client._credential).__name__
         })
 
     except Exception as ex:
         return jsonify({
             "error": "Recommendation failed", 
             "message": str(ex),
-            'credential': type(search_client._credential).__name__
         }), 500
 
 

@@ -1,5 +1,4 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/JeffreyCA/azure-dev/refs/heads/jeffreyca/4889/compose-ai-search/schemas/alpha/azure.yaml.json
-
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/alpha/azure.yaml.json
 name: ai-project
 resources:
   host:
@@ -14,18 +13,18 @@ resources:
     model:
       name: gpt-4o
       version: "2024-08-06"
+  search:
+    type: ai.search
   ai-project:
     type: ai.project
     models:
-      - name: Phi-4-mini-instruct
-        version: "1"
-        format: Microsoft
+      - name: gpt-4o-mini
+        version: "2024-07-18"
+        format: OpenAI
         sku:
           name: GlobalStandard
-          usageName: AIServices.GlobalStandard.MaaS
-          capacity: 1
-  search:
-    type: ai.search
+          usageName: OpenAI.GlobalStandard.gpt-4o-mini
+          capacity: 10
 services:
   host:
     project: .

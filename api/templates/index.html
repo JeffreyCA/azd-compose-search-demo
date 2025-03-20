@@ -97,7 +97,7 @@
         .toggle {
             position: relative;
             display: inline-block;
-            width: 50px;
+            width: 75px;
             height: 24px;
         }
         .toggle input {
@@ -181,18 +181,63 @@
             color: #0078d4;
             margin-top: 10px;
         }
+        
+        /* Header and dropdown styles */
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-btn {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 5px 10px;
+            color: #0078d4;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 350px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        
+        .dropdown-content.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
-    <h1>Azure AI Search Demo</h1>
-    
-    <div class="toggle-container">
-        <span>Use AI Hub Connection:</span>
-        <label class="toggle">
-            <input type="checkbox" id="hubToggle" checked>
-            <span class="slider"></span>
-        </label>
-        <span id="connectionStatus">Using Hub Connection</span>
+    <div class="header-container">
+        <h1>Azure AI Search Demo</h1>
+        <div class="dropdown">
+            <button class="dropdown-btn" id="settingsBtn">⋮</button>
+            <div class="dropdown-content" id="settingsDropdown">
+                <div class="toggle-container">
+                    <span>Use Foundry connection and model:</span>
+                    <label class="toggle">
+                        <!-- To default to direct connection and OpenAI model, remove 'checked' attribute below -->
+                        <input type="checkbox" id="hubToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <span id="connectionStatus">Using Hub Connection</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="card">
@@ -201,6 +246,7 @@
             <button id="createIndexBtn">Create Index</button>
             <button id="uploadDocumentsBtn">Upload Documents</button>
         </div>
+        <div class="loading" id="indexLoading">Loading...</div>
         <div id="indexStatus" class="message"></div>
     </div>
 
@@ -235,6 +281,7 @@
             const resultsContainer = document.getElementById('results');
             const indexStatus = document.getElementById('indexStatus');
             const loading = document.getElementById('loading');
+            const indexLoading = document.getElementById('indexLoading');
             
             // New recommendation elements
             const recommendBtn = document.getElementById('recommendBtn');
@@ -251,41 +298,41 @@
 
             // Create index button click handler
             createIndexBtn.addEventListener('click', function() {
-                showLoading(true);
+                showIndexLoading(true);
                 clearStatus();
                 
                 fetch(`/api/create_index?hub=${hubToggle.checked}`)
                     .then(response => response.json())
                     .then(data => {
-                        showStatus(`Index "${data.index}" created successfully! (Credential: ${data.credential})`, 'success');
+                        showStatus(`Index "${data.index}" created successfully!`, 'success');
                     })
                     .catch(error => {
                         showStatus('Error creating index: ' + error, 'error');
                     })
                     .finally(() => {
-                        showLoading(false);
+                        showIndexLoading(false);
                     });
             });
 
             // Upload documents button click handler
             uploadDocumentsBtn.addEventListener('click', function() {
-                showLoading(true);
+                showIndexLoading(true);
                 clearStatus();
                 
                 fetch(`/api/upload_documents?hub=${hubToggle.checked}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.result) {
-                            showStatus(`Documents uploaded successfully! (Credential: ${data.credential})`, 'success');
+                            showStatus(`Documents uploaded successfully!`, 'success');
                         } else {
-                            showStatus(`Document upload failed: ${data.message || ''} (Credential: ${data.credential})`, 'error');
+                            showStatus(`Document upload failed: ${data.message || ''}`, 'error');
                         }
                     })
                     .catch(error => {
                         showStatus('Error uploading documents: ' + error, 'error');
                     })
                     .finally(() => {
-                        showLoading(false);
+                        showIndexLoading(false);
                     });
             });
 
@@ -323,12 +370,17 @@
             }
 
             function displayResults(data) {
+                if (data.error) {
+                    resultsContainer.innerHTML = `<div class="message error">${data.error}: ${data.message || ''}</div>`;
+                    return;
+                }
+                
                 if (!data.results || data.results.length === 0) {
                     resultsContainer.innerHTML = '<p>No results found</p>';
                     return;
                 }
 
-                let html = `<p>Found ${data.total_count} result(s) (Credential: ${data.credential}):</p>`;
+                let html = `<p>Found ${data.total_count} result(s):</p>`;
                 
                 data.results.forEach(result => {
                     let tagsHtml = '';
@@ -390,7 +442,7 @@
                                 <div class="recommendation-result">
                                     <div class="recommendation-text">${formattedText}</div>
                                     <div class="recommendation-meta">
-                                        <small>Based on ${data.sources_count} hotels (Credential: ${data.credential})</small>
+                                        <small>Based on ${data.sources_count} hotels</small>
                                     </div>
                                 </div>
                             `;
@@ -407,6 +459,10 @@
             function showLoading(show) {
                 loading.style.display = show ? 'block' : 'none';
             }
+            
+            function showIndexLoading(show) {
+                indexLoading.style.display = show ? 'block' : 'none';
+            }
 
             function showStatus(message, type) {
                 indexStatus.textContent = message;
@@ -417,6 +473,23 @@
                 indexStatus.textContent = '';
                 indexStatus.className = 'message';
             }
+
+            // Add dropdown toggle functionality
+            const settingsBtn = document.getElementById('settingsBtn');
+            const settingsDropdown = document.getElementById('settingsDropdown');
+            
+            settingsBtn.addEventListener('click', function() {
+                settingsDropdown.classList.toggle('show');
+            });
+            
+            // Close the dropdown when clicking outside
+            window.addEventListener('click', function(event) {
+                if (!event.target.matches('.dropdown-btn') && !settingsDropdown.contains(event.target)) {
+                    if (settingsDropdown.classList.contains('show')) {
+                        settingsDropdown.classList.remove('show');
+                    }
+                }
+            });
         });
     </script>
 </body>
