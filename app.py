@@ -168,63 +168,68 @@ def get_search_client(hub: bool):
 def create_index():
     """API endpoint to create search index"""
     use_hub = request.args.get('hub', 'False').lower() == 'true'
-    index_client = get_index_client(use_hub)
 
-    fields = [
-            SimpleField(name="HotelId", type=SearchFieldDataType.String, key=True),
-            SearchableField(name="HotelName", type=SearchFieldDataType.String, sortable=True),
-            SearchableField(name="Description", type=SearchFieldDataType.String, analyzer_name="en.lucene"),
-            SearchableField(name="Description_fr", type=SearchFieldDataType.String, analyzer_name="fr.lucene"),
-            SearchableField(name="Category", type=SearchFieldDataType.String, facetable=True, filterable=True, sortable=True),
+    try:
+        index_client = get_index_client(use_hub)
 
-            SearchableField(name="Tags", collection=True, type=SearchFieldDataType.String, facetable=True, filterable=True),
+        fields = [
+                SimpleField(name="HotelId", type=SearchFieldDataType.String, key=True),
+                SearchableField(name="HotelName", type=SearchFieldDataType.String, sortable=True),
+                SearchableField(name="Description", type=SearchFieldDataType.String, analyzer_name="en.lucene"),
+                SearchableField(name="Description_fr", type=SearchFieldDataType.String, analyzer_name="fr.lucene"),
+                SearchableField(name="Category", type=SearchFieldDataType.String, facetable=True, filterable=True, sortable=True),
 
-            SimpleField(name="ParkingIncluded", type=SearchFieldDataType.Boolean, facetable=True, filterable=True, sortable=True),
-            SimpleField(name="LastRenovationDate", type=SearchFieldDataType.DateTimeOffset, facetable=True, filterable=True, sortable=True),
-            SimpleField(name="Rating", type=SearchFieldDataType.Double, facetable=True, filterable=True, sortable=True),
+                SearchableField(name="Tags", collection=True, type=SearchFieldDataType.String, facetable=True, filterable=True),
 
-            ComplexField(name="Address", fields=[
-                SearchableField(name="StreetAddress", type=SearchFieldDataType.String),
-                SearchableField(name="City", type=SearchFieldDataType.String, facetable=True, filterable=True, sortable=True),
-                SearchableField(name="StateProvince", type=SearchFieldDataType.String, facetable=True, filterable=True, sortable=True),
-                SearchableField(name="PostalCode", type=SearchFieldDataType.String, facetable=True, filterable=True, sortable=True),
-                SearchableField(name="Country", type=SearchFieldDataType.String, facetable=True, filterable=True, sortable=True),
-            ])
-        ]
+                SimpleField(name="ParkingIncluded", type=SearchFieldDataType.Boolean, facetable=True, filterable=True, sortable=True),
+                SimpleField(name="LastRenovationDate", type=SearchFieldDataType.DateTimeOffset, facetable=True, filterable=True, sortable=True),
+                SimpleField(name="Rating", type=SearchFieldDataType.Double, facetable=True, filterable=True, sortable=True),
 
-    scoring_profiles = []
-    suggester = [{'name': 'sg', 'source_fields': ['Tags', 'Address/City', 'Address/Country']}]
+                ComplexField(name="Address", fields=[
+                    SearchableField(name="StreetAddress", type=SearchFieldDataType.String),
+                    SearchableField(name="City", type=SearchFieldDataType.String, facetable=True, filterable=True, sortable=True),
+                    SearchableField(name="StateProvince", type=SearchFieldDataType.String, facetable=True, filterable=True, sortable=True),
+                    SearchableField(name="PostalCode", type=SearchFieldDataType.String, facetable=True, filterable=True, sortable=True),
+                    SearchableField(name="Country", type=SearchFieldDataType.String, facetable=True, filterable=True, sortable=True),
+                ])
+            ]
 
-    # Create the search index=
-    index = SearchIndex(name=index_name, fields=fields, suggesters=suggester, scoring_profiles=scoring_profiles)
-    result = index_client.create_or_update_index(index)
-    print(f' {result.name} created')
+        scoring_profiles = []
+        suggester = [{'name': 'sg', 'source_fields': ['Tags', 'Address/City', 'Address/Country']}]
 
-    return jsonify({"index": result.name})
+        # Create the search index=
+        index = SearchIndex(name=index_name, fields=fields, suggesters=suggester, scoring_profiles=scoring_profiles)
+        result = index_client.create_or_update_index(index)
+        print(f' {result.name} created')
+
+        return jsonify({"index": result.name})
+    except Exception as ex:
+        return jsonify({
+            "error": "Create index failed", 
+            "message": str(ex)
+        }), 500
 
 @app.route('/api/upload_documents')
 def upload_documents():
     """API endpoint to upload documents to the index"""
     use_hub = request.args.get('hub', 'False').lower() == 'true'
-    search_client = get_search_client(use_hub)
     try:
+        search_client = get_search_client(use_hub)
         result = search_client.upload_documents(documents=documents)
         print("Upload of new document succeeded: {}".format(result[0].succeeded))
         return jsonify({"result": result[0].succeeded})
     except Exception as ex:
-        print(ex.message)
-        return jsonify({"error": "Upload failed", "message": ex.message}), 500
+        return jsonify({"error": "Upload failed", "message": str(ex)}), 500
 
 @app.route('/api/search')
 def search():
     """API endpoint to perform search with a query"""
     use_hub = request.args.get('hub', 'False').lower() == 'true'
-    search_client = get_search_client(use_hub)
-
-    # Get query parameter from request, default to "*" if not provided
-    search_query = request.args.get('query', '*')
     
     try:
+        search_client = get_search_client(use_hub)
+        # Get query parameter from request, default to "*" if not provided
+        search_query = request.args.get('query', '*')
         # Run a search with the provided query
         results = search_client.search(
             query_type='simple',
@@ -256,9 +261,9 @@ def search():
 @app.route('/api/empty_query')
 def empty_query():
     use_hub = request.args.get('hub', 'False').lower() == 'true'
-    search_client = get_search_client(use_hub)
 
     try:
+        search_client = get_search_client(use_hub)
         # Run an empty query (returns selected fields, all documents)
         results = search_client.search(query_type='simple',
             search_text="*",
@@ -336,16 +341,16 @@ def recommend():
         if use_hub:
             chat_client = get_ai_chat_completion_client()
             response = chat_client.complete(
-            model=foundry_model_name,
-            messages=messages,
-            max_tokens=100,
+                model=foundry_model_name,
+                messages=messages,
+                max_tokens=100,
             )
         else:
             openai_client = get_openai_client()
             response = openai_client.chat.completions.create(
-            model=openai_model_name,
-            messages=messages,
-            max_tokens=100,
+                model=openai_model_name,
+                messages=messages,
+                max_tokens=100,
             )
 
         recommendation = response.choices[0].message.content

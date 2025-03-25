@@ -303,7 +303,11 @@
                 fetch(`/api/create_index?hub=${hubToggle.checked}`)
                     .then(response => response.json())
                     .then(data => {
-                        showStatus(`Index "${data.index}" created successfully!`, 'success');
+                        if (data.index) {
+                            showStatus(`Index "${data.index}" created successfully!`, 'success');
+                        } else {
+                            showStatus(`Index creation failed: ${data.message || ''}`, 'error');
+                        }
                     })
                     .catch(error => {
                         showStatus('Error creating index: ' + error, 'error');
