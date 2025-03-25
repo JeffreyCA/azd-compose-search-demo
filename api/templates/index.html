@@ -97,7 +97,7 @@
         .toggle {
             position: relative;
             display: inline-block;
-            width: 75px;
+            width: 50px;
             height: 24px;
         }
         .toggle input {
@@ -231,10 +231,9 @@
                     <span>Use Foundry connection and model:</span>
                     <label class="toggle">
                         <!-- To default to direct connection and OpenAI model, remove 'checked' attribute below -->
-                        <input type="checkbox" id="hubToggle" checked>
+                        <input type="checkbox" id="hubToggle">
                         <span class="slider"></span>
                     </label>
-                    <span id="connectionStatus">Using Hub Connection</span>
                 </div>
             </div>
         </div>
@@ -262,6 +261,13 @@
 
     <div class="card">
         <h2>AI Hotel Recommendations</h2>
+        <div class="toggle-container">
+            <span>Use grounding with AI Search:</span>
+            <label class="toggle">
+                <input type="checkbox" id="searchToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
         <div class="search-container">
             <input type="text" id="recommendQuery" placeholder="E.g., hotels with pool or complimentary breakfast" value="Can you recommend a hotel with breakfast?">
             <button id="recommendBtn">Get Recommendations</button>
@@ -273,7 +279,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const hubToggle = document.getElementById('hubToggle');
-            const connectionStatus = document.getElementById('connectionStatus');
             const createIndexBtn = document.getElementById('createIndexBtn');
             const uploadDocumentsBtn = document.getElementById('uploadDocumentsBtn');
             const searchBtn = document.getElementById('searchBtn');
@@ -288,13 +293,7 @@
             const recommendQuery = document.getElementById('recommendQuery');
             const recommendationsContainer = document.getElementById('recommendations');
             const recommendLoading = document.getElementById('recommendLoading');
-
-            // Update connection status text based on toggle
-            hubToggle.addEventListener('change', function() {
-                connectionStatus.textContent = this.checked 
-                    ? 'Using Hub Connection' 
-                    : 'Using Direct Connection';
-            });
+            const searchToggle = document.getElementById('searchToggle');
 
             // Create index button click handler
             createIndexBtn.addEventListener('click', function() {
@@ -427,7 +426,8 @@
                 recommendLoading.style.display = 'block';
                 recommendationsContainer.innerHTML = '';
                 
-                fetch(`/api/recommend?hub=${hubToggle.checked}&query=${encodeURIComponent(query)}`)
+                const useSearch = searchToggle.checked;
+                fetch(`/api/recommend?hub=${hubToggle.checked}&search=${useSearch}&query=${encodeURIComponent(query)}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.error) {

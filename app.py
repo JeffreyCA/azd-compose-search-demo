@@ -23,8 +23,8 @@ app = Flask(__name__,
 
 scopes = "https://cognitiveservices.azure.com/.default"
 
-tenant_id = os.environ.get('AZURE_TENANT_ID')
 credential = DefaultAzureCredential()
+# tenant_id = os.environ.get('AZURE_TENANT_ID')
 # credential = AzureDeveloperCliCredential(tenant_id=tenant_id)
 token_provider: AzureADTokenProvider = get_bearer_token_provider(credential, scopes)
 
@@ -167,7 +167,7 @@ def get_search_client(hub: bool):
 @app.route('/api/create_index')
 def create_index():
     """API endpoint to create search index"""
-    use_hub = request.args.get('hub', 'True').lower() == 'true'
+    use_hub = request.args.get('hub', 'False').lower() == 'true'
     index_client = get_index_client(use_hub)
 
     fields = [
@@ -205,7 +205,7 @@ def create_index():
 @app.route('/api/upload_documents')
 def upload_documents():
     """API endpoint to upload documents to the index"""
-    use_hub = request.args.get('hub', 'True').lower() == 'true'
+    use_hub = request.args.get('hub', 'False').lower() == 'true'
     search_client = get_search_client(use_hub)
     try:
         result = search_client.upload_documents(documents=documents)
@@ -218,7 +218,7 @@ def upload_documents():
 @app.route('/api/search')
 def search():
     """API endpoint to perform search with a query"""
-    use_hub = request.args.get('hub', 'True').lower() == 'true'
+    use_hub = request.args.get('hub', 'False').lower() == 'true'
     search_client = get_search_client(use_hub)
 
     # Get query parameter from request, default to "*" if not provided
@@ -255,7 +255,7 @@ def search():
 
 @app.route('/api/empty_query')
 def empty_query():
-    use_hub = request.args.get('hub', 'True').lower() == 'true'
+    use_hub = request.args.get('hub', 'False').lower() == 'true'
     search_client = get_search_client(use_hub)
 
     try:
@@ -287,28 +287,32 @@ def empty_query():
 @app.route('/api/recommend')
 def recommend():
     """API endpoint to get AI recommendations based on search results"""
-    use_hub = request.args.get('hub', 'True').lower() == 'true'
-    search_client = get_search_client(use_hub)
-    
+    use_hub = request.args.get('hub', 'False').lower() == 'true'
+    use_search = request.args.get('search', 'False').lower() == 'true'
+
     # Get query parameter from request
     query = request.args.get('query', '')
     if not query:
         return jsonify({"error": "Query parameter is required"}), 400
     
     try:
-        # Search for relevant hotels
-        search_results = search_client.search(
-            search_text=query,
-            top=5,
-            select="Description,HotelName,Tags"
-        )
-        search_results = list(search_results)
-        
-        # Format search results as sources
-        sources_formatted = "\n".join([
-            f'{document["HotelName"]}:{document["Description"]}:{document.get("Tags", [])}' 
-            for document in search_results
-        ])
+        sources_formatted = ""
+        search_results = []
+        if use_search:
+            search_client = get_search_client(use_hub)
+            # Search for relevant hotels
+            search_results = search_client.search(
+                search_text=query,
+                top=5,
+                select="Description,HotelName,Tags"
+            )
+            search_results = list(search_results)
+            
+            # Format search results as sources
+            sources_formatted = "\n".join([
+                f'{document["HotelName"]}:{document["Description"]}:{document.get("Tags", [])}' 
+                for document in search_results
+            ])
 
         # Grounding prompt
         grounding_prompt = """

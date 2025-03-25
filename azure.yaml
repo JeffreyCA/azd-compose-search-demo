@@ -6,7 +6,6 @@ resources:
     uses:
       - gpt-4o
       - search
-      - ai-project
     port: 5000
   gpt-4o:
     type: ai.openai.model
@@ -15,16 +14,6 @@ resources:
       version: "2024-08-06"
   search:
     type: ai.search
-  ai-project:
-    type: ai.project
-    models:
-      - name: gpt-4o-mini
-        version: "2024-07-18"
-        format: OpenAI
-        sku:
-          name: GlobalStandard
-          usageName: OpenAI.GlobalStandard.gpt-4o-mini
-          capacity: 10
 services:
   host:
     project: .
