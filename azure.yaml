@@ -4,14 +4,14 @@ name: search-demo
 metadata:
   template: azd-init@0.0.0-dev.0
 services:
-  search-demo:
-    project: .
+  api:
+    project: ./api
     host: containerapp
     language: python
     docker:
       path: Dockerfile
 resources:
-  search-demo:
+  api:
     type: host.containerapp
     port: 5000
     uses:
