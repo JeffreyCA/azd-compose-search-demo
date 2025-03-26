@@ -222,52 +222,8 @@
     </style>
 </head>
 <body>
-    <div class="header-container">
-        <h1>Azure AI Search Demo</h1>
-        <div class="dropdown">
-            <button class="dropdown-btn" id="settingsBtn">⋮</button>
-            <div class="dropdown-content" id="settingsDropdown">
-                <div class="toggle-container">
-                    <span>Use Foundry connection and model:</span>
-                    <label class="toggle">
-                        <!-- To default to direct connection and OpenAI model, remove 'checked' attribute below -->
-                        <input type="checkbox" id="hubToggle">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>Index Management</h2>
-        <div class="actions">
-            <button id="createIndexBtn">Create Index</button>
-            <button id="uploadDocumentsBtn">Upload Documents</button>
-        </div>
-        <div class="loading" id="indexLoading">Loading...</div>
-        <div id="indexStatus" class="message"></div>
-    </div>
-
-    <div class="card">
-        <h2>Search</h2>
-        <div class="search-container">
-            <input type="text" id="searchQuery" placeholder="Enter search query or leave empty for all results">
-            <button id="searchBtn">Search</button>
-        </div>
-        <div class="loading" id="loading">Loading results...</div>
-        <div id="results"></div>
-    </div>
-
     <div class="card">
         <h2>AI Hotel Recommendations</h2>
-        <div class="toggle-container">
-            <span>Use grounding with AI Search:</span>
-            <label class="toggle">
-                <input type="checkbox" id="searchToggle">
-                <span class="slider"></span>
-            </label>
-        </div>
         <div class="search-container">
             <input type="text" id="recommendQuery" placeholder="E.g., hotels with pool or complimentary breakfast" value="Can you recommend a hotel with breakfast?">
             <button id="recommendBtn">Get Recommendations</button>
@@ -277,136 +233,12 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const hubToggle = document.getElementById('hubToggle');
-            const createIndexBtn = document.getElementById('createIndexBtn');
-            const uploadDocumentsBtn = document.getElementById('uploadDocumentsBtn');
-            const searchBtn = document.getElementById('searchBtn');
-            const searchQuery = document.getElementById('searchQuery');
-            const resultsContainer = document.getElementById('results');
-            const indexStatus = document.getElementById('indexStatus');
-            const loading = document.getElementById('loading');
-            const indexLoading = document.getElementById('indexLoading');
-            
+        document.addEventListener('DOMContentLoaded', function() {            
             // New recommendation elements
             const recommendBtn = document.getElementById('recommendBtn');
             const recommendQuery = document.getElementById('recommendQuery');
             const recommendationsContainer = document.getElementById('recommendations');
             const recommendLoading = document.getElementById('recommendLoading');
-            const searchToggle = document.getElementById('searchToggle');
-
-            // Create index button click handler
-            createIndexBtn.addEventListener('click', function() {
-                showIndexLoading(true);
-                clearStatus();
-                
-                fetch(`/api/create_index?hub=${hubToggle.checked}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.index) {
-                            showStatus(`Index "${data.index}" created successfully!`, 'success');
-                        } else {
-                            showStatus(`Index creation failed: ${data.message || ''}`, 'error');
-                        }
-                    })
-                    .catch(error => {
-                        showStatus('Error creating index: ' + error, 'error');
-                    })
-                    .finally(() => {
-                        showIndexLoading(false);
-                    });
-            });
-
-            // Upload documents button click handler
-            uploadDocumentsBtn.addEventListener('click', function() {
-                showIndexLoading(true);
-                clearStatus();
-                
-                fetch(`/api/upload_documents?hub=${hubToggle.checked}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.result) {
-                            showStatus(`Documents uploaded successfully!`, 'success');
-                        } else {
-                            showStatus(`Document upload failed: ${data.message || ''}`, 'error');
-                        }
-                    })
-                    .catch(error => {
-                        showStatus('Error uploading documents: ' + error, 'error');
-                    })
-                    .finally(() => {
-                        showIndexLoading(false);
-                    });
-            });
-
-            // Search button click handler
-            searchBtn.addEventListener('click', function() {
-                performSearch();
-            });
-
-            // Allow search on Enter key press
-            searchQuery.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    performSearch();
-                }
-            });
-
-            function performSearch() {
-                showLoading(true);
-                resultsContainer.innerHTML = '';
-                
-                const query = searchQuery.value.trim();
-                const endpoint = query === '' ? '/api/empty_query' : '/api/search';
-                const url = `${endpoint}?hub=${hubToggle.checked}${query !== '' ? '&query=' + encodeURIComponent(query) : ''}`;
-                
-                fetch(url)
-                    .then(response => response.json())
-                    .then(data => {
-                        displayResults(data);
-                    })
-                    .catch(error => {
-                        resultsContainer.innerHTML = `<div class="message error">Error performing search: ${error}</div>`;
-                    })
-                    .finally(() => {
-                        showLoading(false);
-                    });
-            }
-
-            function displayResults(data) {
-                if (data.error) {
-                    resultsContainer.innerHTML = `<div class="message error">${data.error}: ${data.message || ''}</div>`;
-                    return;
-                }
-                
-                if (!data.results || data.results.length === 0) {
-                    resultsContainer.innerHTML = '<p>No results found</p>';
-                    return;
-                }
-
-                let html = `<p>Found ${data.total_count} result(s):</p>`;
-                
-                data.results.forEach(result => {
-                    let tagsHtml = '';
-                    if (result.tags && result.tags.length > 0) {
-                        tagsHtml = '<div class="tags">';
-                        result.tags.forEach(tag => {
-                            tagsHtml += `<span class="tag">${tag}</span>`;
-                        });
-                        tagsHtml += '</div>';
-                    }
-                    
-                    html += `
-                        <div class="result-card">
-                            <div class="hotel-name">${result.hotel_name}</div>
-                            <div class="description">${result.description}</div>
-                            ${tagsHtml}
-                            <small>Score: ${result.score}</small>
-                        </div>
-                    `;
-                });
-                
-                resultsContainer.innerHTML = html;
-            }
 
             // Recommendation button click handler
             recommendBtn.addEventListener('click', function() {
@@ -430,8 +262,7 @@
                 recommendLoading.style.display = 'block';
                 recommendationsContainer.innerHTML = '';
                 
-                const useSearch = searchToggle.checked;
-                fetch(`/api/recommend?hub=${hubToggle.checked}&search=${useSearch}&query=${encodeURIComponent(query)}`)
+                fetch(`/api/recommend?query=${encodeURIComponent(query)}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.error) {
@@ -462,10 +293,6 @@
 
             function showLoading(show) {
                 loading.style.display = show ? 'block' : 'none';
-            }
-            
-            function showIndexLoading(show) {
-                indexLoading.style.display = show ? 'block' : 'none';
             }
 
             function showStatus(message, type) {

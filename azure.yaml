@@ -1,5 +1,12 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/alpha/azure.yaml.json
 name: ai-project
+services:
+  host:
+    project: .
+    host: containerapp
+    language: python
+    docker:
+      path: Dockerfile
 resources:
   host:
     type: host.containerapp
@@ -14,10 +21,4 @@ resources:
       version: "2024-08-06"
   search:
     type: ai.search
-services:
-  host:
-    project: .
-    host: containerapp
-    language: python
-    docker:
-      path: Dockerfile
+
