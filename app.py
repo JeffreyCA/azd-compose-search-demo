@@ -45,6 +45,24 @@ def recommend():
             for document in search_results
         ])
 
+        response_data = {
+            'recommendation': "",
+            'results': [],
+            'sources_count': len(search_results),
+        }
+        
+        for result in search_results:
+            response_data['results'].append({
+                'score': result["@search.score"],
+                'hotel_name': result["HotelName"],
+                'description': result["Description"],
+                'tags': result.get("Tags", [])
+            })
+
+        # If no OpenAI endpoint is provided, return the search results only
+        if not openai_endpoint:
+            return jsonify(response_data)
+
         # Grounding prompt
         grounding_prompt = """
         You are a friendly assistant that recommends hotels based on activities and amenities.
@@ -74,14 +92,9 @@ def recommend():
             messages=messages,
             max_tokens=100,
         )
+        response_data['recommendation'] = response.choices[0].message.content
 
-        recommendation = response.choices[0].message.content
-
-        return jsonify({
-            'recommendation': recommendation,
-            'sources_count': len(search_results),
-        })
-
+        return jsonify(response_data)
     except Exception as ex:
         return jsonify({
             "error": "Recommendation failed", 

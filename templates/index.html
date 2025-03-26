@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Azure AI Search Demo</title>
+    <title>Hotels</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -11,7 +11,7 @@
             margin: 0;
             padding: 20px;
             color: #333;
-            max-width: 1100px;
+            max-width: 1400px; /* Increased width to accommodate side-by-side layout */
             margin: 0 auto;
         }
         h1 {
@@ -88,54 +88,6 @@
             border-radius: 12px;
             font-size: 12px;
         }
-        .toggle-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .toggle {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-        }
-        .toggle input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 24px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider {
-            background-color: #0078d4;
-        }
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-        #results {
-            margin-top: 20px;
-        }
         .loading {
             display: none;
             color: #0078d4;
@@ -154,14 +106,27 @@
             background-color: #f2dede;
             color: #a94442;
         }
-        .recommendations {
+        
+        /* New Styles for Side-by-Side Layout */
+        .search-results-container {
+            display: flex;
+            gap: 20px;
             margin-top: 20px;
+        }
+        .recommendations-column {
+            flex: 1;
+            min-width: 0; /* Prevents overflowing */
+        }
+        .results-column {
+            flex: 1;
+            min-width: 0; /* Prevents overflowing */
         }
         .recommendation-result {
             background-color: #f0f7ff;
             padding: 15px;
             border-radius: 5px;
             border-left: 4px solid #0078d4;
+            height: 100%; /* Make recommendation area full height */
         }
         .recommendation-text {
             line-height: 1.6;
@@ -176,61 +141,34 @@
             margin-right: 5px;
             font-weight: bold;
         }
-        #recommendLoading {
-            display: none;
-            color: #0078d4;
-            margin-top: 10px;
-        }
         
-        /* Header and dropdown styles */
-        .header-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .dropdown-btn {
-            background-color: transparent;
-            border: none;
-            cursor: pointer;
-            font-size: 20px;
-            padding: 5px 10px;
-            color: #0078d4;
-        }
-        
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            right: 0;
-            background-color: white;
-            min-width: 350px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-            padding: 15px;
-        }
-        
-        .dropdown-content.show {
-            display: block;
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .search-results-container {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>AI Hotel Recommendations</h2>
+        <h2>Hotels</h2>
         <div class="search-container">
             <input type="text" id="recommendQuery" placeholder="E.g., hotels with pool or complimentary breakfast" value="Can you recommend a hotel with breakfast?">
             <button id="recommendBtn">Get Recommendations</button>
         </div>
         <div class="loading" id="recommendLoading">Generating recommendations...</div>
-        <div id="recommendations" class="recommendations"></div>
-        <div id="results"></div>
+        
+        <div class="search-results-container">
+            <div class="recommendations-column">
+                <p>AI Recommendations:</p>
+                <div id="recommendations" class="recommendations"></div>
+            </div>
+            <div class="results-column">
+                <p>Search Results:</p>
+                <div id="results"></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -276,7 +214,6 @@
                                 .replace(/•/g, '<span class="bullet">•</span>');
                                 
                             recommendationsContainer.innerHTML = `
-                                <p>Response from AI:</p>
                                 <div class="recommendation-result">
                                     <div class="recommendation-text">${formattedText}</div>
                                 </div>
@@ -292,6 +229,7 @@
                         recommendLoading.style.display = 'none';
                     });
             }
+
             function displayResults(data) {
                 if (data.error) {
                     resultsContainer.innerHTML = `<div class="message error">${data.error}: ${data.message || ''}</div>`;
@@ -303,7 +241,7 @@
                     return;
                 }
 
-                let html = `<p>Response from search (${data.results.length} results):</p>`;
+                let html = '';
                 
                 data.results.forEach(result => {
                     let tagsHtml = '';
@@ -327,37 +265,6 @@
                 
                 resultsContainer.innerHTML = html;
             }
-
-            function showLoading(show) {
-                loading.style.display = show ? 'block' : 'none';
-            }
-
-            function showStatus(message, type) {
-                indexStatus.textContent = message;
-                indexStatus.className = 'message ' + type;
-            }
-
-            function clearStatus() {
-                indexStatus.textContent = '';
-                indexStatus.className = 'message';
-            }
-
-            // Add dropdown toggle functionality
-            const settingsBtn = document.getElementById('settingsBtn');
-            const settingsDropdown = document.getElementById('settingsDropdown');
-            
-            settingsBtn.addEventListener('click', function() {
-                settingsDropdown.classList.toggle('show');
-            });
-            
-            // Close the dropdown when clicking outside
-            window.addEventListener('click', function(event) {
-                if (!event.target.matches('.dropdown-btn') && !settingsDropdown.contains(event.target)) {
-                    if (settingsDropdown.classList.contains('show')) {
-                        settingsDropdown.classList.remove('show');
-                    }
-                }
-            });
         });
     </script>
 </body>
