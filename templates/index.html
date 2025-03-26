@@ -230,6 +230,7 @@
         </div>
         <div class="loading" id="recommendLoading">Generating recommendations...</div>
         <div id="recommendations" class="recommendations"></div>
+        <div id="results"></div>
     </div>
 
     <script>
@@ -239,6 +240,7 @@
             const recommendQuery = document.getElementById('recommendQuery');
             const recommendationsContainer = document.getElementById('recommendations');
             const recommendLoading = document.getElementById('recommendLoading');
+            const resultsContainer = document.getElementById('results');
 
             // Recommendation button click handler
             recommendBtn.addEventListener('click', function() {
@@ -274,13 +276,13 @@
                                 .replace(/•/g, '<span class="bullet">•</span>');
                                 
                             recommendationsContainer.innerHTML = `
+                                <p>Response from AI:</p>
                                 <div class="recommendation-result">
                                     <div class="recommendation-text">${formattedText}</div>
-                                    <div class="recommendation-meta">
-                                        <small>Based on ${data.sources_count} hotels</small>
-                                    </div>
                                 </div>
                             `;
+
+                            displayResults(data);
                         }
                     })
                     .catch(error => {
@@ -289,6 +291,41 @@
                     .finally(() => {
                         recommendLoading.style.display = 'none';
                     });
+            }
+            function displayResults(data) {
+                if (data.error) {
+                    resultsContainer.innerHTML = `<div class="message error">${data.error}: ${data.message || ''}</div>`;
+                    return;
+                }
+                
+                if (!data.results || data.results.length === 0) {
+                    resultsContainer.innerHTML = '<p>No results found</p>';
+                    return;
+                }
+
+                let html = `<p>Response from search (${data.results.length} results):</p>`;
+                
+                data.results.forEach(result => {
+                    let tagsHtml = '';
+                    if (result.tags && result.tags.length > 0) {
+                        tagsHtml = '<div class="tags">';
+                        result.tags.forEach(tag => {
+                            tagsHtml += `<span class="tag">${tag}</span>`;
+                        });
+                        tagsHtml += '</div>';
+                    }
+                    
+                    html += `
+                        <div class="result-card">
+                            <div class="hotel-name">${result.hotel_name}</div>
+                            <div class="description">${result.description}</div>
+                            ${tagsHtml}
+                            <small>Score: ${result.score}</small>
+                        </div>
+                    `;
+                });
+                
+                resultsContainer.innerHTML = html;
             }
 
             function showLoading(show) {
