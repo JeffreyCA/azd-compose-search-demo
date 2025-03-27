@@ -1,8 +1,10 @@
 # azd-compose-search-demo
 
-Simple RAG app showcasing [azd's composability feature](https://aka.ms/azd-compose), which lets users progressively compose the Azure resources required for their app without manually writing Bicep. Uses Azure OpenAI and Foundry models, Azure Container Apps, and Azure AI Search (non-vector index).
+`azd-compose-search-demo` is a simple RAG app built using [aka.ms/azd-compose](https://aka.ms/azd-compose), which lets users progressively compose the Azure resources required for their app without manually writing Bicep.
 
-![app](app.png)
+This app uses Azure OpenAI, Azure Container Apps, and Azure AI Search (non-vector index).
+
+![site](site.png)
 
 ## References used
 
