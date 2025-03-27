@@ -11,7 +11,7 @@
             margin: 0;
             padding: 20px;
             color: #333;
-            max-width: 1400px; /* Increased width to accommodate side-by-side layout */
+            max-width: 1400px;
             margin: 0 auto;
         }
         h1 {
@@ -107,7 +107,56 @@
             color: #a94442;
         }
         
-        /* New Styles for Side-by-Side Layout */
+        /* Markdown Styles */
+        .recommendation-text {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #0078d4;
+        }
+        .recommendation-text h1 { 
+            color: #0078d4;
+            border-bottom: 1px solid #0078d4;
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+        .recommendation-text h2 { 
+            color: #0078d4;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+        .recommendation-text h3, 
+        .recommendation-text h4, 
+        .recommendation-text h5, 
+        .recommendation-text h6 { 
+            color: #0078d4;
+        }
+        .recommendation-text ul, 
+        .recommendation-text ol {
+            padding-left: 30px;
+        }
+        .recommendation-text a {
+            color: #0078d4;
+            text-decoration: none;
+        }
+        .recommendation-text a:hover {
+            text-decoration: underline;
+        }
+        .recommendation-text code {
+            background-color: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 90%;
+        }
+        .recommendation-text pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        
+        /* Search Results Layout */
         .search-results-container {
             display: flex;
             gap: 20px;
@@ -115,31 +164,11 @@
         }
         .recommendations-column {
             flex: 1;
-            min-width: 0; /* Prevents overflowing */
+            min-width: 0;
         }
         .results-column {
             flex: 1;
-            min-width: 0; /* Prevents overflowing */
-        }
-        .recommendation-result {
-            background-color: #f0f7ff;
-            padding: 15px;
-            border-radius: 5px;
-            border-left: 4px solid #0078d4;
-            height: 100%; /* Make recommendation area full height */
-        }
-        .recommendation-text {
-            line-height: 1.6;
-            margin-bottom: 10px;
-        }
-        .recommendation-meta {
-            color: #666;
-            font-style: italic;
-        }
-        .bullet {
-            color: #0078d4;
-            margin-right: 5px;
-            font-weight: bold;
+            min-width: 0;
         }
         
         /* Responsive Design */
@@ -149,6 +178,7 @@
             }
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.0/marked.min.js"></script>
 </head>
 <body>
     <div class="card">
@@ -180,6 +210,14 @@
             const recommendLoading = document.getElementById('recommendLoading');
             const resultsContainer = document.getElementById('results');
 
+            // Configure marked to handle security and styling
+            marked.setOptions({
+                breaks: true,
+                gfm: true,
+                headerIds: false,
+                sanitize: true, // Sanitize HTML to prevent XSS
+            });
+
             // Recommendation button click handler
             recommendBtn.addEventListener('click', function() {
                 getRecommendations();
@@ -208,14 +246,12 @@
                         if (data.error) {
                             recommendationsContainer.innerHTML = `<div class="message error">${data.error}: ${data.message || ''}</div>`;
                         } else {
-                            // Format the recommendation text to preserve line breaks and bullet points
-                            const formattedText = data.recommendation
-                                .replace(/\n/g, '<br>')
-                                .replace(/•/g, '<span class="bullet">•</span>');
+                            // Render Markdown to HTML
+                            const renderedRecommendation = marked.parse(data.recommendation);
                                 
                             recommendationsContainer.innerHTML = `
-                                <div class="recommendation-result">
-                                    <div class="recommendation-text">${formattedText}</div>
+                                <div class="recommendation-text">
+                                    ${renderedRecommendation}
                                 </div>
                             `;
 
