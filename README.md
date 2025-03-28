@@ -38,8 +38,8 @@ This app uses Azure OpenAI, Azure Container Apps, and Azure AI Search (non-vecto
    azd init
    ```
    
-   **? How do you want to initialize your app?** Use code in the current directory  
-   **? Select an option** Confirm and continue initializing my app
+   **? How do you want to initialize your app?** `Use code in the current directory`  
+   **? Select an option** `Confirm and continue initializing my app`
 
    It should generate an `azure.yaml` and `next-steps.md` file.
 
@@ -59,10 +59,10 @@ This app uses Azure OpenAI, Azure Container Apps, and Azure AI Search (non-vecto
 > ```sh
 > azd add
 > ```
-> **? What would you like to add?** Host service  
-> **? Where is your app code project located?** api  
-> **? Enter a name for this service:** api  
-> **? azd will use Azure Container App to host this project. Continue?** Yes
+> **? What would you like to add?** `Host service`  
+> **? Where is your app code project located?** `api`  
+> **? Enter a name for this service:** `api`  
+> **? azd will use Azure Container App to host this project. Continue?** `Yes`
 
 ### 2. Progressively `azd add` resources
 
@@ -142,10 +142,7 @@ There are some one-time scripts in `scripts` directory needed to initialize and 
 
 ### 4. Use the app
 
-> [!TIP]
-> To get the Container App URL, run `azd show`.
-
-Navigate to the Container App URL and try out some queries. Examples:
+Navigate to the Container App URL (run `azd show`) and try out some queries. Examples:
 
 - Can you recommend a hotel with complimentary breakfast?
 - I'm looking for lively hotels with unique rooms.
