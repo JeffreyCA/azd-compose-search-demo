@@ -71,34 +71,37 @@ This app uses Azure OpenAI, Azure Container Apps, and Azure AI Search (non-vecto
    azd add
    ```
 
-   **? What would you like to add?** AI  
-   **? Which type of AI resource?** Azure AI Search  
-   **? Select the service(s) that uses this resource:** api (press `space` to select)  
-   **? Accept changes to azure.yaml? (Y/n)** Y  
-   **? Do you want to provision these changes?** Yes (preview changes)/Yes  
-   **? Provision these changes to Azure? (Y/n)** Y
+   **? What would you like to add?** `AI`  
+   **? Which type of AI resource?** `Azure AI Search`  
+   **? Select the service(s) that uses this resource:** `api` (press `space` to select)  
+   **? Accept changes to azure.yaml? (Y/n)** `Y`  
+   **? Do you want to provision these changes?** `Yes (preview changes)/Yes`  
+   **? Provision these changes to Azure? (Y/n)** `Y`
 
    The app should be deployed with basic search functionality.
 
-2. Add Azure OpenAI:
+2. Add Azure OpenAI model:
    ```sh
    azd add
    ```
 
-   **? What would you like to add?** AI  
-   **? Which type of AI resource?** Azure OpenAI model  
-   **? Which type of Azure OpenAI service?** Chat (GPT)  
-   **? Select the model** gpt-4o (any version)  
-   **? Provide a name for this model** gpt-4o  
-   **? Select the service(s) that uses this resource:** api (press `space` to select)  
-   **? Accept changes to azure.yaml? (Y/n)** Y  
-   **? Do you want to provision these changes?** Yes (preview changes)/Yes  
-   **? Provision these changes to Azure? (Y/n)** Y
+   **? What would you like to add?** `AI`  
+   **? Which type of AI resource?** `Azure OpenAI model`  
+   **? Which type of Azure OpenAI service?** `Chat (GPT)`  
+   **? Select the model** `gpt-4o (any version)`  
+   **? Provide a name for this model** `gpt-4o`  
+   **? Select the service(s) that uses this resource:** `api` (press `space` to select)  
+   **? Accept changes to azure.yaml? (Y/n)** `Y`  
+   **? Do you want to provision these changes?** `Yes (preview changes)/Yes`  
+   **? Provision these changes to Azure? (Y/n)** `Y`
 
    This enables the full RAG capabilities with AI-powered responses.
 
 > [!TIP]
 > If provisioning fails due to `InsufficientQuota`, follow the instructions in the [Troubleshooting](#troubleshooting) section.
+
+> [!TIP]
+> You can try adding other OpenAI models. Make sure to update the model name in `api/app.py`.
 
 ### 3. Set up search index
 There are some one-time scripts in `scripts` directory needed to initialize and populate the search index.
