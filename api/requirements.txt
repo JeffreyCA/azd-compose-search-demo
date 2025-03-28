@@ -1,5 +1,4 @@
 azure-ai-inference==1.0.0b9
-azure-ai-projects==1.0.0b7
 azure-identity==1.21.0
 azure-search-documents==11.6.0b10
 Flask==3.0.3
