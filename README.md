@@ -44,7 +44,7 @@ This app uses Azure OpenAI, Azure Container Apps, and Azure AI Search (non-vecto
    It should generate an `azure.yaml` and `next-steps.md` file.
 
 > [!NOTE]
-> For reference, we've included an `azure.yaml.example` file that shows the final configuration after adding all resources.
+> For reference, we've included an [azure.yaml.example file](azure.yaml.example) that shows the final configuration after adding all resources.
 
 3. Deploy web app:
    ```sh
@@ -54,7 +54,7 @@ This app uses Azure OpenAI, Azure Container Apps, and Azure AI Search (non-vecto
 > [!TIP]
 > Instead of `git clone` followed by `azd init`, you can also set up your project by running `azd init -t JeffreyCA/azd-compose-search-demo`, which automatically clones the repository and initializes the project with an empty `azure.yaml`.  
 >
-> However, you'll need to `azd add` the Azure Container App host yourself:
+> However, you need to `azd add` the Azure Container App host yourself:
 >
 > ```sh
 > azd add
@@ -75,7 +75,7 @@ This app uses Azure OpenAI, Azure Container Apps, and Azure AI Search (non-vecto
    **? Which type of AI resource?** `Azure AI Search`  
    **? Select the service(s) that uses this resource:** `api` (press `space` to select)  
    **? Accept changes to azure.yaml? (Y/n)** `Y`  
-   **? Do you want to provision these changes?** `Yes (preview changes)/Yes`  
+   **? Do you want to provision these changes?** `Yes (preview changes)`/`Yes`  
    **? Provision these changes to Azure? (Y/n)** `Y`
 
    The app should be deployed with basic search functionality.
@@ -92,7 +92,7 @@ This app uses Azure OpenAI, Azure Container Apps, and Azure AI Search (non-vecto
    **? Provide a name for this model** `gpt-4o`  
    **? Select the service(s) that uses this resource:** `api` (press `space` to select)  
    **? Accept changes to azure.yaml? (Y/n)** `Y`  
-   **? Do you want to provision these changes?** `Yes (preview changes)/Yes`  
+   **? Do you want to provision these changes?** `Yes (preview changes)`/`Yes`  
    **? Provision these changes to Azure? (Y/n)** `Y`
 
    This enables the full RAG capabilities with AI-powered responses.
@@ -104,7 +104,8 @@ This app uses Azure OpenAI, Azure Container Apps, and Azure AI Search (non-vecto
 > You can try adding other OpenAI models. Make sure to update the model name in `api/app.py`.
 
 ### 3. Set up search index
-There are some one-time scripts in `scripts` directory needed to initialize and populate the search index.
+
+The `scripts` directory contains one-time setup scripts that initialize and populate your Azure AI Search index with sample hotel data. You can run these scripts locally because as part of provisioning the search resource, azd also configures the necessary role assignments for your Azure credential to access the search service.
 
 1. Get Azure AI Search endpoint info:
    ```sh
